@@ -27,7 +27,7 @@ export function Public({ children }: { children: ReactNode }) {
         console.log("📡 Auth state changed:", event);
         if (session) {
           dispatch(setSession(session));
-          router.replace("/"); // 👉 langsung arahkan ke halaman utama
+          router.replace("/dashboard"); // 👉 langsung arahkan ke halaman utama
         } else {
           dispatch(clearSession());
         }
@@ -41,7 +41,7 @@ export function Public({ children }: { children: ReactNode }) {
   // Kalau sudah login, redirect ke halaman utama
   useEffect(() => {
     if (status === "succeeded" && data) {
-      router.replace("/");
+      router.replace("/dashboard");
     }
   }, [status, data, router]);
 

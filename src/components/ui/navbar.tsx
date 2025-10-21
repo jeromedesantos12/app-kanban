@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { supabase } from "../../lib/supabase";
 import { fetchSession } from "../../redux/slices";
 import { AppDispatch, RootState } from "../../redux/store";
-import { AlignEndVertical, LogOut } from "lucide-react";
+import { AlignEndVertical, LogIn, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ProfileType } from "@/types/profile";
@@ -62,21 +62,33 @@ export function Navbar() {
           <h1 className="font-bold text-2xl text-white">Todo</h1>
         </div>
         <div className="flex gap-5 justify-center items-center">
-          <Image
-            onClick={() => router.push("/profile")}
-            src={base64Image || defaultAvatar}
-            alt={`Image of ${profile?.full_name || "user"}`}
-            width={50}
-            height={50}
-            className="w-10 h-10 rounded-full object-cover cursor-pointer"
-          />
-          <button
-            onClick={handleLogout}
-            className="bg-blue-400 hover:bg-blue-300 duration-300 cursor-pointer text-black font-medium py-1 px-3 text-sm rounded-lg flex  justify-center not-only-of-type:items-center gap-2"
-          >
-            <LogOut />
-            <p>Logout</p>
-          </button>
+          {session && (
+            <Image
+              onClick={() => router.push("/profile")}
+              src={base64Image || defaultAvatar}
+              alt={`Image of ${profile?.full_name || "user"}`}
+              width={50}
+              height={50}
+              className="w-10 h-10 rounded-full object-cover cursor-pointer"
+            />
+          )}
+          {session ? (
+            <button
+              onClick={handleLogout}
+              className="bg-blue-400 hover:bg-blue-300 duration-300 cursor-pointer text-black font-medium py-1 px-3 text-sm rounded-lg flex  justify-center not-only-of-type:items-center gap-2"
+            >
+              <LogOut />
+              <p>Logout</p>
+            </button>
+          ) : (
+            <button
+              onClick={() => router.push("/login")}
+              className="bg-blue-400 hover:bg-blue-300 duration-300 cursor-pointer text-black font-medium py-1 px-3 text-sm rounded-lg flex  justify-center not-only-of-type:items-center gap-2"
+            >
+              <LogIn />
+              <p>Login</p>
+            </button>
+          )}
         </div>
       </div>
     </div>
