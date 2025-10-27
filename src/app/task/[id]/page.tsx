@@ -1,7 +1,7 @@
 "use client";
 
 import { Loading } from "@/components/ui/loading";
-import { Navbar } from "@/components/ui/navbar";
+import { Navbar } from "@/components/molecules/navbar";
 import { supabase } from "@/lib/supabase";
 import { Protected } from "@/routes/protected";
 import { TaskType } from "@/types/task";

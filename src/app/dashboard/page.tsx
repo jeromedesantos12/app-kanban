@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Protected } from "@/routes/protected";
 import { supabase } from "@/lib/supabase";
-import { Navbar } from "@/components/ui/navbar";
+import { Navbar } from "@/components/molecules/navbar";
 import { BoardType } from "@/types/board";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";

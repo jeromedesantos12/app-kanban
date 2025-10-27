@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { Protected } from "@/routes/protected";
-import { Navbar } from "@/components/ui/navbar";
+import { Navbar } from "@/components/molecules/navbar";
 import { ProfileFormValues, profileSchema } from "@/schemas/profile";
 import defaultAvatar from "../../../public/default-avatar.jpg";
 import Image from "next/image";

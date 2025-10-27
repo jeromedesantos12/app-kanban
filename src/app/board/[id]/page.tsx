@@ -3,7 +3,7 @@
 import toast from "react-hot-toast";
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { Protected } from "@/routes/protected";
-import { Navbar } from "@/components/ui/navbar";
+import { Navbar } from "@/components/molecules/navbar";
 import { Bot, Plus, X } from "lucide-react";
 import { supabase } from "@/lib/supabase"; // Kita akan ubah List menjadi child KanbanBoard
 import type { ListType } from "@/types/list";

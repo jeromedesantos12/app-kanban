@@ -11,6 +11,7 @@ import { ProfileType } from "@/types/profile";
 import defaultAvatar from "../../../public/default-avatar.jpg";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const router = useRouter();
@@ -52,8 +53,13 @@ export function Navbar() {
   }, [session?.user.id]);
 
   return (
-    <div className="sticky flex justify-center top-0 z-10 bg-black shadow-2xl backdrop-blur-2xl">
-      <div className="flex justify-between gap-10 items-center w-full py-5 px-10">
+    <div
+      className={cn(
+        "sticky flex justify-center top-0 z-10",
+        session ? "bg-black shadow-2xl backdrop-blur-2xl" : "bg-transparent"
+      )}
+    >
+      <div className="flex justify-between gap-10 max-w-7xl items-center w-full py-5 px-10">
         <div
           onClick={() => router.push("/")}
           className="flex items-center gap-3 cursor-pointer"
@@ -75,7 +81,7 @@ export function Navbar() {
           {session ? (
             <button
               onClick={handleLogout}
-              className="bg-blue-400 hover:bg-blue-300 duration-300 cursor-pointer text-black font-medium py-1 px-3 text-sm rounded-lg flex  justify-center not-only-of-type:items-center gap-2"
+              className="bg-blue-400 border-2 border-blue-400  hover:bg-blue-300 duration-300 cursor-pointer text-black font-medium py-2 px-3 text-sm rounded-lg flex  justify-center not-only-of-type:items-center gap-2"
             >
               <LogOut />
               <p>Logout</p>
@@ -83,7 +89,7 @@ export function Navbar() {
           ) : (
             <button
               onClick={() => router.push("/login")}
-              className="bg-blue-400 hover:bg-blue-300 duration-300 cursor-pointer text-black font-medium py-1 px-3 text-sm rounded-lg flex  justify-center not-only-of-type:items-center gap-2"
+              className="bg-transparant border-2 border-white hover:bg-white duration-300 cursor-pointer text-white hover:text-black font-medium py-2 px-3 text-sm rounded-lg flex justify-center not-only-of-type:items-center gap-2"
             >
               <LogIn />
               <p>Login</p>
