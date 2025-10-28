@@ -92,7 +92,7 @@ export function Navbar({
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2 text-white">
               <KanbanSquare className="h-7 w-7" />
-              <span className="font-bold text-xl">Kanban</span>
+              <span className="font-bold text-xl">Todo</span>
             </Link>
           </div>
           <div className="hidden md:block">
