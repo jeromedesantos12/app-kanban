@@ -68,8 +68,8 @@ export default function DashboardPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <div className="flex gap-4 justify-center items-center mt-20 px-10">
-          <div className="flex flex-col gap-4 w-full max-w-6xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-4 mt-20">
             <h1 className="font-bold text-2xl text-white drop-shadow-[2px_2px_4px_#a1a1aa]">
               Choose your Board..
             </h1>

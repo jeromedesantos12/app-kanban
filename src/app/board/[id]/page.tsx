@@ -138,99 +138,101 @@ export default function BoardPage({ children }: { children: ReactNode }) {
       {isLoading ? (
         <Loading />
       ) : (
-        <div className="flex flex-col gap-5 mt-10">
-          {/* Kontrol Add List tetap di sini */}
-          <div className="flex gap-4 flex-wrap px-10">
-            {hide ? (
-              <div
-                onClick={() => setHide(false)}
-                className="bg-white py-4 px-4 w-fit h-fit rounded-lg flex shadow-2xl gap-2 justify-center items-center hover:bg-zinc-300 duration-300 cursor-pointer"
-              >
-                <Plus className="text-black" size={20} />
-                <h1 className="text-black font-medium text-md">Add List</h1>
-              </div>
-            ) : (
-              <div className="bg-black py-4 px-4 w-full max-w-xs rounded-lg flex flex-col shadow-2xl justify-center items-center">
-                <form
-                  className="flex flex-col gap-2 w-full"
-                  action="submit"
-                  onSubmit={handleSubmit}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-5 mt-10">
+            {/* Kontrol Add List tetap di sini */}
+            <div className="flex gap-4 flex-wrap">
+              {hide ? (
+                <div
+                  onClick={() => setHide(false)}
+                  className="bg-white py-4 px-4 w-fit h-fit rounded-lg flex shadow-2xl gap-2 justify-center items-center hover:bg-zinc-300 duration-300 cursor-pointer"
                 >
-                  <input
-                    className="bg-black text-white placeholder:text-white rounded-lg px-5 py-2 w-full outline-white focus:outline-blue-400 outline-2"
-                    type="text"
-                    value={listName}
-                    placeholder="Enter List name.."
-                    onChange={(e) => setListName(e.target.value)}
-                  />
-                  <div className="flex gap-2 items-center">
-                    <button
-                      disabled={disabled}
-                      type="submit"
-                      className={`${
-                        disabled && "opacity-50"
-                      } bg-blue-400 cursor-pointer text-black font-medium py-2 px-4 text-sm rounded-xl`}
-                    >
-                      Add List
-                    </button>
-                    <div
-                      onClick={() => setHide(true)}
-                      className="cursor-pointer hover:bg-zinc-800 p-1 rounded-lg duration-300"
-                    >
-                      <X className="text-white" />
+                  <Plus className="text-black" size={20} />
+                  <h1 className="text-black font-medium text-md">Add List</h1>
+                </div>
+              ) : (
+                <div className="bg-black py-4 px-4 w-full max-w-xs rounded-lg flex flex-col shadow-2xl justify-center items-center">
+                  <form
+                    className="flex flex-col gap-2 w-full"
+                    action="submit"
+                    onSubmit={handleSubmit}
+                  >
+                    <input
+                      className="bg-black text-white placeholder:text-white rounded-lg px-5 py-2 w-full outline-white focus:outline-blue-400 outline-2"
+                      type="text"
+                      value={listName}
+                      placeholder="Enter List name.."
+                      onChange={(e) => setListName(e.target.value)}
+                    />
+                    <div className="flex gap-2 items-center">
+                      <button
+                        disabled={disabled}
+                        type="submit"
+                        className={`${
+                          disabled && "opacity-50"
+                        } bg-blue-400 cursor-pointer text-black font-medium py-2 px-4 text-sm rounded-xl`}
+                      >
+                        Add List
+                      </button>
+                      <div
+                        onClick={() => setHide(true)}
+                        className="cursor-pointer hover:bg-zinc-800 p-1 rounded-lg duration-300"
+                      >
+                        <X className="text-white" />
+                      </div>
                     </div>
-                  </div>
-                </form>
-              </div>
-            )}
-          </div>
-
-          {/* Gunakan KanbanProvider di sini */}
-          <div className="px-10">
-            <KanbanProvider
-              className="flex gap-10 flex-wrap"
-              columns={kanbanColumns}
-              data={kanbanData}
-              onDragEnd={handleDragEnd}
-            >
-              {(column) => (
-                <KanbanBoard
-                  id={column.id}
-                  key={column.id}
-                  // Anda bisa menambahkan class untuk styling dari div List lama
-                  className="w-full h-fit max-w-xs bg-black py-4 px-4 rounded-lg flex flex-col gap-2 shadow-2xl border-none"
-                >
-                  <KanbanHeader className="border-none">
-                    <h1 className="text-white font-medium text-lg">
-                      {column.name}
-                    </h1>
-                  </KanbanHeader>
-                  <KanbanCards className="px-0" id={column.id}>
-                    {(feature) => {
-                      console.log(feature);
-
-                      return (
-                        // Gunakan TaskCard sebagai wrapper untuk KanbanCard
-
-                        <TaskCard
-                          column={column.name}
-                          id={feature.id}
-                          key={feature.id}
-                          name={feature.name}
-                        />
-                      );
-                    }}
-                  </KanbanCards>
-                  {/* Sisipkan fitur Add Task di bawah KanbanCards */}
-                  <AddTask
-                    listId={column.id}
-                    onTaskAdded={(newTask) =>
-                      setTasks((prev) => [...prev, newTask])
-                    }
-                  />
-                </KanbanBoard>
+                  </form>
+                </div>
               )}
-            </KanbanProvider>
+            </div>
+
+            {/* Gunakan KanbanProvider di sini */}
+            <div>
+              <KanbanProvider
+                className="flex gap-10 flex-wrap"
+                columns={kanbanColumns}
+                data={kanbanData}
+                onDragEnd={handleDragEnd}
+              >
+                {(column) => (
+                  <KanbanBoard
+                    id={column.id}
+                    key={column.id}
+                    // Anda bisa menambahkan class untuk styling dari div List lama
+                    className="w-full h-fit max-w-xs bg-black py-4 px-4 rounded-lg flex flex-col gap-2 shadow-2xl border-none"
+                  >
+                    <KanbanHeader className="border-none">
+                      <h1 className="text-white font-medium text-lg">
+                        {column.name}
+                      </h1>
+                    </KanbanHeader>
+                    <KanbanCards className="px-0" id={column.id}>
+                      {(feature) => {
+                        console.log(feature);
+
+                        return (
+                          // Gunakan TaskCard sebagai wrapper untuk KanbanCard
+
+                          <TaskCard
+                            column={column.name}
+                            id={feature.id}
+                            key={feature.id}
+                            name={feature.name}
+                          />
+                        );
+                      }}
+                    </KanbanCards>
+                    {/* Sisipkan fitur Add Task di bawah KanbanCards */}
+                    <AddTask
+                      listId={column.id}
+                      onTaskAdded={(newTask) =>
+                        setTasks((prev) => [...prev, newTask])
+                      }
+                    />
+                  </KanbanBoard>
+                )}
+              </KanbanProvider>
+            </div>
           </div>
         </div>
       )}

@@ -11,7 +11,7 @@ export function Feature() {
   return (
     <section
       id="feature"
-      className="bg-white py-20 gap-10 flex flex-col items-center"
+      className="bg-white py-40 gap-10 flex flex-col items-center scroll-mt-15 sm:scroll-mt-15 mx-auto"
     >
       <motion.h1
         initial={{ opacity: 0, y: 50 }}
@@ -22,7 +22,7 @@ export function Feature() {
         <Waypoints className="text-pink-500" />
         Fitur Utama
       </motion.h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mt-5 px-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mt-5 px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, translateY: "100%" }}
           whileInView={{ opacity: 1, translateY: 0 }}
