@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kanban",
+  title: "Todo",
   description: "Transformasi Produktivitas Tim dengan Kanban Cerdas",
   icons: {
     icon: [
