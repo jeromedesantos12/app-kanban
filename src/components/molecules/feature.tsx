@@ -11,7 +11,7 @@ export function Feature() {
   return (
     <section
       id="feature"
-      className="bg-white py-40 gap-10 flex flex-col items-center scroll-mt-15 sm:scroll-mt-15 mx-auto"
+      className="bg-white py-20 gap-10 flex flex-col items-center scroll-mt-15 sm:scroll-mt-50 mx-auto"
     >
       <motion.h1
         initial={{ opacity: 0, y: 50 }}

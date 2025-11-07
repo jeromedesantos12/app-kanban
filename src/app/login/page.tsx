@@ -34,6 +34,7 @@ export default function LoginPage() {
       password,
     });
     if (error) {
+      setIsSubmitting(false);
       return toast.error(error.message);
     }
     toast.success("User login successfully!");

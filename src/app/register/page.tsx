@@ -45,9 +45,11 @@ export default function RegisterPage() {
       .maybeSingle();
 
     if (existingUser) {
+      setIsSubmitting(false);
       throw new Error("Email ini sudah terdaftar. Silakan masuk.");
     }
     if (error) {
+      setIsSubmitting(false);
       return toast.error(error.message);
     }
     toast.success("User registered successfully!");

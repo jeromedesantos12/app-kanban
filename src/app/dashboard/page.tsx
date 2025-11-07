@@ -15,6 +15,7 @@ import { Loading } from "@/components/ui/loading";
 export default function DashboardPage() {
   const router = useRouter();
   const [boards, setBoards] = useState<BoardType[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [boardName, setBoardName] = useState("");
   const [hide, setHide] = useState(true);
@@ -31,6 +32,7 @@ export default function DashboardPage() {
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setIsSubmitting(true);
     const { data, error } = await supabase
       .from("boards")
       .insert([
@@ -41,11 +43,13 @@ export default function DashboardPage() {
       ])
       .select();
     if (error) {
+      setIsSubmitting(false);
       return toast.error(error.message);
     }
     setBoards([...boards, data[0] as BoardType]);
     setBoardName("");
     setHide(true);
+    setIsSubmitting(false);
   }
 
   useEffect(() => {
@@ -55,6 +59,7 @@ export default function DashboardPage() {
         .from("boards")
         .select("*");
       if (boardsError) {
+        setIsLoading(false);
         return toast.error(boardsError.message);
       }
       setBoards(boardsData as BoardType[]);
@@ -69,7 +74,7 @@ export default function DashboardPage() {
         <Loading />
       ) : (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 mt-20">
+          <div className="flex flex-col gap-4 mt-40">
             <h1 className="font-bold text-2xl text-white drop-shadow-[2px_2px_4px_#a1a1aa]">
               Choose your Board..
             </h1>
@@ -111,13 +116,13 @@ export default function DashboardPage() {
                     />
                     <div className="flex gap-2 items-center">
                       <button
-                        disabled={disabled}
+                        disabled={disabled || isSubmitting}
                         type="submit"
                         className={`${
                           disabled && "opacity-50"
                         } bg-blue-400 cursor-pointer text-black font-medium py-2 px-4 text-sm rounded-xl`}
                       >
-                        Add List
+                        {isSubmitting ? "Adding..." : "Add List"}
                       </button>
                       <div
                         onClick={() => setHide(true)}

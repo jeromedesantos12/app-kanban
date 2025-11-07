@@ -7,7 +7,7 @@ export function Hero() {
   return (
     <section
       id="home"
-      className="relative w-full flex flex-col items-center justify-center gap-12 pt-24 pb-40 px-4 sm:px-6 lg:px-8 text-center scroll-mt-20"
+      className="relative w-full flex flex-col items-center justify-center min-h-screen gap-12 px-4 sm:px-6 lg:px-8 text-center scroll-mt-20"
     >
       <div className="flex flex-col lg:flex-row items-center justify-center gap-12 max-w-7xl mx-auto">
         <div className="max-w-4xl flex flex-col items-center lg:items-start gap-6 lg:w-1/2 text-center lg:text-left">

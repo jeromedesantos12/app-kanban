@@ -80,7 +80,9 @@ export default function ProfilePage() {
   }, [reset, session?.user.id]);
 
   async function onSubmit(formData: ProfileFormValues) {
+    setIsSubmitting(true);
     if (!session?.user?.id) {
+      setIsSubmitting(false);
       return toast.error("You must be logged in to update your profile.");
     }
     setIsSubmitting(true);
@@ -93,7 +95,8 @@ export default function ProfilePage() {
           .from("avatars")
           .remove([filePath]);
         if (deleteError) {
-          toast.error(deleteError.message);
+          setIsSubmitting(false);
+          return toast.error(deleteError.message);
         }
       }
       const fileExt = image.name.split(".").pop();
@@ -105,7 +108,8 @@ export default function ProfilePage() {
           upsert: false,
         });
       if (uploadError) {
-        toast.error(uploadError.message);
+        setIsSubmitting(false);
+        return toast.error(uploadError.message);
       }
       if (uploadData) {
         const { data: publicUrlData } = supabase.storage
@@ -123,7 +127,8 @@ export default function ProfilePage() {
             .from("avatars")
             .remove([filePath]);
           if (deleteError) {
-            toast.error(deleteError.message);
+            setIsSubmitting(false);
+            return toast.error(deleteError.message);
           }
         }
       }
@@ -136,7 +141,8 @@ export default function ProfilePage() {
       })
       .eq("id", session.user.id);
     if (updateError) {
-      toast.error(updateError.message);
+      setIsSubmitting(false);
+      return toast.error(updateError.message);
     }
     toast.success("Profile updated successfully!");
     setIsSubmitting(false);

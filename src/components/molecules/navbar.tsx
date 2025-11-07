@@ -81,13 +81,14 @@ export function Navbar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300",
+        "fixed top-0 z-50 w-full transition-all duration-300",
         scrolled || isOpen
           ? "bg-gray-900/80 backdrop-blur-lg shadow-lg"
-          : "bg-transparent"
+          : "bg-transparent",
+        session?.user.id && "bg-black shadow-lg"
       )}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-20">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2 text-white">

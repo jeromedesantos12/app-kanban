@@ -10,7 +10,7 @@ export function Workflow() {
   return (
     <section
       id="workflow"
-      className="pb-40 pt-30 gap-10 flex flex-col items-center scroll-mt-15 sm:scroll-mt-15 mx-auto"
+      className="min-h-screen gap-10 flex flex-col justify-center items-center mx-auto"
     >
       <motion.h1
         initial={{ opacity: 0, y: 50 }}
