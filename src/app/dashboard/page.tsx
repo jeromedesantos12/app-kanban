@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Edit, Plus, Save, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Protected } from "@/routes/protected";
@@ -20,6 +20,8 @@ export default function DashboardPage() {
   const [boardName, setBoardName] = useState("");
   const [hide, setHide] = useState(true);
   const [disabled, setDisabled] = useState(true);
+  const [editingBoardId, setEditingBoardId] = useState<string | null>(null);
+  const [editingBoardName, setEditingBoardName] = useState("");
   const { data: session } = useSelector((state: RootState) => state.session);
 
   useEffect(() => {
@@ -46,18 +48,88 @@ export default function DashboardPage() {
       setIsSubmitting(false);
       return toast.error(error.message);
     }
-    setBoards([...boards, data[0] as BoardType]);
+    setBoards((prevBoards) => [...prevBoards, data[0] as BoardType]);
     setBoardName("");
     setHide(true);
     setIsSubmitting(false);
   }
 
+  async function handleUpdate(e: FormEvent<HTMLFormElement>, id: string) {
+    e.preventDefault();
+    if (!editingBoardName.trim()) {
+      return toast.error("Board name cannot be empty.");
+    }
+
+    const { error } = await supabase
+      .from("boards")
+      .update({ title: editingBoardName })
+      .eq("id", id);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setBoards((prevBoards) =>
+        prevBoards.map((board) =>
+          board.id === id ? { ...board, title: editingBoardName } : board
+        )
+      );
+      toast.success("Board updated successfully!");
+      setEditingBoardId(null);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    const { error } = await supabase.from("boards").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error deleting board:", error);
+      toast.error(error.message);
+    } else {
+      setBoards((prevBoards) => prevBoards.filter((board) => board.id !== id));
+      toast.success("Board deleted successfully!");
+    }
+  }
+
+  function confirmDelete(id: string) {
+    toast(
+      (t) => (
+        <div className="flex flex-col items-center gap-4 p-2">
+          <p className="font-semibold text-center">
+            Apakah Anda yakin ingin menghapus board ini?
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                handleDelete(id);
+                toast.dismiss(t.id);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm"
+            >
+              Ya, Hapus
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg text-sm"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 6000 }
+    );
+  }
+
   useEffect(() => {
     (async function fetchData() {
+      if (!session?.user.id) return;
+
       setIsLoading(true);
       const { data: boardsData, error: boardsError } = await supabase
         .from("boards")
-        .select("*");
+        .select("*")
+        .eq("user_id", session.user.id);
+
       if (boardsError) {
         setIsLoading(false);
         return toast.error(boardsError.message);
@@ -65,7 +137,7 @@ export default function DashboardPage() {
       setBoards(boardsData as BoardType[]);
       setIsLoading(false);
     })();
-  }, []);
+  }, [session?.user.id]);
 
   return (
     <Protected>
@@ -80,15 +152,63 @@ export default function DashboardPage() {
             </h1>
             <div className="flex gap-2 w-full flex-wrap">
               {boards.map((board) => {
+                if (editingBoardId === board.id) {
+                  return (
+                    <form
+                      key={board.id}
+                      onSubmit={(e) => handleUpdate(e, board.id)}
+                      className="bg-zinc-800 p-4 w-fit h-fit rounded-lg flex shadow-2xl gap-2 text-white font-medium justify-center items-center"
+                    >
+                      <input
+                        type="text"
+                        value={editingBoardName}
+                        onChange={(e) => setEditingBoardName(e.target.value)}
+                        className="bg-transparent outline-none border-b-2 border-blue-500"
+                        autoFocus
+                      />
+                      <button type="submit" className="hover:text-green-400">
+                        <Save size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingBoardId(null)}
+                        className="hover:text-red-400"
+                      >
+                        <X size={18} />
+                      </button>
+                    </form>
+                  );
+                }
                 return (
                   <div
                     key={board.id}
                     className="bg-black p-4 w-fit h-fit rounded-lg flex shadow-2xl gap-2 text-white font-medium justify-center items-center hover:bg-zinc-800 duration-300 cursor-pointer"
                     onClick={() => {
-                      router.push(`board/${board.id}`);
+                      router.push(`board/${String(board.id)}`);
                     }}
                   >
                     {board.title}
+                    <div className="flex gap-1">
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingBoardId(board.id);
+                          setEditingBoardName(board.title);
+                        }}
+                        className="cursor-pointer hover:bg-zinc-700 p-1 rounded-lg duration-300"
+                      >
+                        <Edit color="white" size={16} />
+                      </div>
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmDelete(board.id);
+                        }}
+                        className="cursor-pointer hover:bg-zinc-700 p-1 rounded-lg duration-300"
+                      >
+                        <X color="white" size={16} />
+                      </div>
+                    </div>
                   </div>
                 );
               })}

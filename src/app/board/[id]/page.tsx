@@ -139,7 +139,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
         <Loading />
       ) : (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-5 mt-10">
+          <div className="flex flex-col gap-5 mt-40">
             {/* Kontrol Add List tetap di sini */}
             <div className="flex gap-4 flex-wrap">
               {hide ? (
