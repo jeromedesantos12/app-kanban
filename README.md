@@ -15,5 +15,3 @@
 - pas nampilin list task dia bukan sistem looping alias langsung nerima props
 
 2. Si AI ganti dari Open AI ke Gemini karena API Keynya di akun aku ga jalan (yang di .env itu key punya si Richard)
-
-3. Tambah tombol hapus dan edit
