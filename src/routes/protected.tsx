@@ -50,7 +50,7 @@ export function Protected({ children }: { children: ReactNode }) {
   }, [status, data, router]);
 
   if (status === "loading" || status === "idle") {
-    return <Loading />;
+    return <Loading size={30} className="mt-40" />;
   }
   if (status === "succeeded" && data) {
     return <>{children}</>;

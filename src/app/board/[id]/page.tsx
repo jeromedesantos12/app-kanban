@@ -136,7 +136,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
     <Protected>
       <Navbar />
       {isLoading ? (
-        <Loading />
+        <Loading size={30} className="mt-40" />
       ) : (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-5 mt-40">

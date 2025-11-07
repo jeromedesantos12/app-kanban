@@ -153,7 +153,7 @@ export default function ProfilePage() {
     <Protected>
       <Navbar />
       {isLoading ? (
-        <Loading />
+        <Loading size={30} className="mt-40" />
       ) : (
         <div className="flex flex-col justify-center items-center mt-20 px-5">
           <div className="bg-white py-10 px-8 w-full max-w-sm rounded-lg flex flex-col gap-5 shadow-2xl justify-center items-center">

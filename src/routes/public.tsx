@@ -46,7 +46,7 @@ export function Public({ children }: { children: ReactNode }) {
   }, [status, data, router]);
 
   if (status === "loading" || status === "idle") {
-    return <Loading />;
+    return <Loading size={30} className="mt-40" />;
   }
 
   // Kalau belum login, tampilkan halaman public (misalnya login / register)

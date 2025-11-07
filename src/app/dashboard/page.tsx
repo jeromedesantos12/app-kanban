@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const [disabled, setDisabled] = useState(true);
   const [editingBoardId, setEditingBoardId] = useState<string | null>(null);
   const [editingBoardName, setEditingBoardName] = useState("");
+  const [isUpdateDisabled, setIsUpdateDisabled] = useState(true);
   const { data: session } = useSelector((state: RootState) => state.session);
 
   useEffect(() => {
@@ -31,6 +32,14 @@ export default function DashboardPage() {
       setDisabled(false);
     }
   }, [boardName]);
+
+  useEffect(() => {
+    if (!editingBoardName) {
+      setIsUpdateDisabled(true);
+    } else {
+      setIsUpdateDisabled(false);
+    }
+  }, [editingBoardName]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -56,6 +65,7 @@ export default function DashboardPage() {
 
   async function handleUpdate(e: FormEvent<HTMLFormElement>, id: string) {
     e.preventDefault();
+    setIsSubmitting(true);
     if (!editingBoardName.trim()) {
       return toast.error("Board name cannot be empty.");
     }
@@ -67,6 +77,7 @@ export default function DashboardPage() {
 
     if (error) {
       toast.error(error.message);
+      setIsSubmitting(false);
     } else {
       setBoards((prevBoards) =>
         prevBoards.map((board) =>
@@ -75,6 +86,7 @@ export default function DashboardPage() {
       );
       toast.success("Board updated successfully!");
       setEditingBoardId(null);
+      setIsSubmitting(false);
     }
   }
 
@@ -143,7 +155,7 @@ export default function DashboardPage() {
     <Protected>
       <Navbar />
       {isLoading ? (
-        <Loading />
+        <Loading size={30} className="mt-40" />
       ) : (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 mt-40">
@@ -166,8 +178,18 @@ export default function DashboardPage() {
                         className="bg-transparent outline-none border-b-2 border-blue-500"
                         autoFocus
                       />
-                      <button type="submit" className="hover:text-green-400">
-                        <Save size={18} />
+                      <button
+                        disabled={isUpdateDisabled || isSubmitting}
+                        type="submit"
+                        className={`${
+                          isUpdateDisabled && "opacity-50"
+                        } hover:text-green-400`}
+                      >
+                        {isSubmitting ? (
+                          <Loading size={18} />
+                        ) : (
+                          <Save size={18} />
+                        )}
                       </button>
                       <button
                         type="button"

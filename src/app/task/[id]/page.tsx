@@ -38,7 +38,7 @@ export default function DetailPage() {
     <Protected>
       <Navbar />
       {isLoading ? (
-        <Loading />
+        <Loading size={30} className="mt-40" />
       ) : (
         task && (
           <div className="flex flex-col justify-center items-center mt-20 px-5">
