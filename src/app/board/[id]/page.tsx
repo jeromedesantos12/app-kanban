@@ -216,20 +216,38 @@ export default function BoardPage({ children }: { children: ReactNode }) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     
-    // Ambil list_id yang sudah diupdate secara optimis dari state
-    const updatedTask = tasks.find((t) => t.id === active.id);
-    if (!updatedTask) return;
+    const activeId = active.id;
+    const overId = over.id;
 
-    // Kirim perubahan ke database
-    const { error } = await supabase
-      .from("tasks")
-      .update({ list_id: updatedTask.list_id })
-      .eq("id", active.id);
+    const isActiveATask = active.data.current?.type === "Task";
+    if (!isActiveATask) return;
+
+    // Tentukan ID kolom tujuan, baik saat drop di atas kolom atau di atas task lain
+    const newColumnId = 
+      over.data.current?.type === "Task"
+        ? over.data.current.task.list_id
+        : overId;
+
+    // 1. Lakukan pembaruan state secara optimis untuk UI
+    const originalTasks = [...tasks];
+    setTasks((currentTasks) => {
+      const activeIndex = currentTasks.findIndex((t) => t.id === activeId);
+      const overIndex = currentTasks.findIndex((t) => t.id === overId);
+
+      if (currentTasks[activeIndex].list_id !== newColumnId) {
+        currentTasks[activeIndex].list_id = newColumnId as string;
+        return arrayMove(currentTasks, activeIndex, overIndex);
+      }
+      return arrayMove(currentTasks, activeIndex, overIndex);
+    });
+
+    // 2. Kirim pembaruan ke database
+    const { error } = await supabase.from("tasks").update({ list_id: newColumnId }).eq("id", activeId);
 
     if (error) {
       toast.error(`Gagal memindahkan task: ${error.message}`);
-      // Jika gagal, muat ulang data dari server untuk rollback
-      fetchData(boardId);
+      // Jika gagal, kembalikan state ke posisi semula (rollback)
+      setTasks(originalTasks);
     }
   }
 
@@ -369,7 +387,6 @@ export default function BoardPage({ children }: { children: ReactNode }) {
               <DndContext
                 sensors={sensors}
                 onDragStart={onDragStart}
-                onDragOver={onDragOver}
                 onDragEnd={onDragEnd}
               >
                 {lists.map((list) => (
