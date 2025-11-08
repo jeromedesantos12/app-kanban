@@ -5,17 +5,22 @@ import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { Protected } from "@/routes/protected";
 import { Navbar } from "@/components/molecules/navbar"; // Pastikan path ini benar
 import { Bot, Plus, X, Pencil, Trash2, Eye } from "lucide-react";
-import { supabase } from "@/lib/supabase"; // Kita akan ubah List menjadi child KanbanBoard
+import { supabase } from "@/lib/supabase";
 import type { ListType } from "@/types/list";
 import type { TaskType } from "@/types/task"; // Impor TaskType
-import type { DragEndEvent } from "@/components/ui/shadcn-io/kanban"; // Import dari lokasi yang sama dengan komponen kanban Anda
 import {
-  KanbanCard,
-  KanbanBoard,
-  KanbanCards,
-  KanbanHeader,
-  KanbanProvider,
-} from "@/components/ui/shadcn-io/kanban"; // Import komponen Kanban
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  DragOverEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { SortableContext, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS, is_fl } from "@dnd-kit/utilities";
+import { createPortal } from "react-dom";
 import { useRouter, useParams } from "next/navigation";
 import { Loading } from "@/components/ui/loading";
 
@@ -34,6 +39,15 @@ export default function BoardPage({ children }: { children: ReactNode }) {
   const [isUpdateDisabled, setIsUpdateDisabled] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddingList, setIsAddingList] = useState(false);
+  const [activeTask, setActiveTask] = useState<TaskType | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // 5px
+      },
+    })
+  );
 
   useEffect(() => {
     if (!listName) {
@@ -148,39 +162,74 @@ export default function BoardPage({ children }: { children: ReactNode }) {
     }
   }
 
-  function handleEditTask(taskId: string) {
-    router.push(`/task/${taskId}`);
+  function onDragOver(event: DragOverEvent) {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    if (activeId === overId) return;
+
+    const isActiveATask = active.data.current?.type === "Task";
+    const isOverATask = over.data.current?.type === "Task";
+
+    if (!isActiveATask) return;
+
+    // Memindahkan task ke kolom lain
+    if (isActiveATask && isOverATask) {
+      const activeTask = tasks.find((t) => t.id === activeId);
+      const overTask = tasks.find((t) => t.id === overId);
+
+      if (activeTask && overTask && activeTask.list_id !== overTask.list_id) {
+        setTasks((tasks) => {
+          const activeIndex = tasks.findIndex((t) => t.id === activeId);
+          tasks[activeIndex].list_id = overTask.list_id;
+          return arrayMove(tasks, activeIndex, activeIndex);
+        });
+      }
+    }
+
+    const isOverAColumn = over.data.current?.type === "Column";
+    if (isActiveATask && isOverAColumn) {
+      const activeTask = tasks.find((t) => t.id === activeId);
+      if (activeTask && activeTask.list_id !== overId) {
+        setTasks((currentTasks) => {
+          const activeIndex = currentTasks.findIndex((t) => t.id === activeId);
+          // Update list_id secara optimis untuk UI
+          currentTasks[activeIndex].list_id = overId as string;
+          return arrayMove(currentTasks, activeIndex, activeIndex);
+        });
+      }
+    }
   }
 
-  // Fungsi untuk menangani drag and drop task
-  async function handleDragEnd(e: DragEndEvent) {
-    const { active, over } = e;
-    if (!over) return;
-    const newColumnId = over.id; // over.id adalah id dari KanbanBoard (yaitu List id)
-    const draggedTaskId = active.id; // active.id adalah id dari KanbanCard (yaitu Task id)
-    const listTarget = lists.find(({ id }) => id === newColumnId);
-    if (!listTarget) return;
+  function onDragStart(event: DragStartEvent) {
+    if (event.active.data.current?.type === "Task") {
+      setActiveTask(event.active.data.current.task);
+      return;
+    }
+  }
 
-    // 1. Update State Lokal
-    setTasks((prevTasks) =>
-      prevTasks.map((task) => {
-        if (task.id === draggedTaskId) {
-          return { ...task, list_id: newColumnId as string };
-        } // update kolom list_id
-        return task;
-      })
-    );
+  async function onDragEnd(event: DragEndEvent) {
+    setActiveTask(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    // Ambil list_id yang sudah diupdate secara optimis dari state
+    const updatedTask = tasks.find((t) => t.id === active.id);
+    if (!updatedTask) return;
 
-    // 2. Update di Supabase
+    // Kirim perubahan ke database
     const { error } = await supabase
       .from("tasks")
-      .update({ list_id: newColumnId })
-      .eq("id", draggedTaskId);
+      .update({ list_id: updatedTask.list_id })
+      .eq("id", active.id);
 
     if (error) {
       toast.error(`Gagal memindahkan task: ${error.message}`);
-      // Opsional: Lakukan rollback state lokal jika update database gagal
-      // Anda bisa memuat ulang data atau membalikkan state
+      // Jika gagal, muat ulang data dari server untuk rollback
+      fetchData(boardId);
     }
   }
 
@@ -241,7 +290,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
           <div className="flex gap-3">
             <button
               onClick={() => {
-                handleDeleteTask(id);
+                handleDeleteTask(id); // Panggil fungsi hapus di sini
                 toast.dismiss(t.id);
               }}
               className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm"
@@ -260,24 +309,6 @@ export default function BoardPage({ children }: { children: ReactNode }) {
       { duration: 6000 }
     );
   }
-
-  // Format lists agar sesuai dengan properti 'columns' yang diharapkan KanbanProvider
-  const kanbanColumns = lists.map((list) => ({
-    id: list.id,
-    name: list.list_name,
-    // Tambahkan properti color jika Anda ingin menggunakannya
-    color: "#6B7280", // Default color
-  }));
-
-  // Format tasks agar sesuai dengan properti 'data' yang diharapkan KanbanProvider
-  // Pastikan properti kolom task mengacu pada list_id
-  const kanbanData = tasks.map((task) => ({
-    id: task.id,
-    name: task.title,
-    column: task.list_id, // Ini adalah kunci: Kanban menggunakan 'column'
-    taskData: task,
-    // Tambahkan properti task lainnya
-  }));
 
   return (
     <Protected>
@@ -334,111 +365,44 @@ export default function BoardPage({ children }: { children: ReactNode }) {
             </div>
 
             {/* Gunakan KanbanProvider di sini */}
-            <div>
-              <KanbanProvider
-                className="flex gap-10 flex-wrap"
-                columns={kanbanColumns}
-                data={kanbanData}
-                onDragEnd={handleDragEnd}
+            <div className="flex gap-10 flex-wrap">
+              <DndContext
+                sensors={sensors}
+                onDragStart={onDragStart}
+                onDragOver={onDragOver}
+                onDragEnd={onDragEnd}
               >
-                {(column) => (
-                  <KanbanBoard
-                    id={column.id}
-                    key={column.id}
-                    // Anda bisa menambahkan class untuk styling dari div List lama
-                    className="w-full h-fit max-w-xs bg-black py-4 px-4 rounded-lg flex flex-col gap-2 shadow-2xl border-none"
-                  >
-                    <KanbanHeader className="border-none">
-                      {editingListId === column.id ? (
-                        <form
-                          onSubmit={handleUpdateList}
-                          className="flex flex-col gap-2 w-full"
-                        >
-                          <input
-                            className="bg-black text-white placeholder:text-white rounded-lg px-5 py-2 w-full outline-white focus:outline-blue-400 outline-2"
-                            type="text"
-                            value={editingListName}
-                            onChange={(e) => setEditingListName(e.target.value)}
-                          />
-                          <div className="flex gap-2 items-center">
-                            <button
-                              disabled={isUpdateDisabled || isSubmitting}
-                              type="submit"
-                              className={`flex items-center justify-center gap-2 relative ${
-                                (isUpdateDisabled || isSubmitting) &&
-                                "opacity-50"
-                              } bg-blue-400 cursor-pointer text-black font-medium py-2 px-4 text-sm rounded-xl`}
-                            >
-                              {isSubmitting && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <Loading size={15} />
-                                </div>
-                              )}
-                              <span className={isSubmitting ? "invisible" : ""}>
-                                Update
-                              </span>
-                            </button>
-                            <div
-                              onClick={() => setEditingListId(null)}
-                              className="cursor-pointer hover:bg-zinc-800 p-1 rounded-lg duration-300"
-                            >
-                              <X className="text-white" />
-                            </div>
-                          </div>
-                        </form>
-                      ) : (
-                        <div className="flex items-center justify-between w-full">
-                          <h1 className="text-white font-medium text-lg">
-                            {column.name}
-                          </h1>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingListId(column.id);
-                                setEditingListName(column.name);
-                              }}
-                              className="text-white"
-                            >
-                              <Pencil size={20} />
-                            </button>
-                            <button
-                              onClick={() => confirmDeleteList(column.id)}
-                              className="text-white"
-                            >
-                              <X size={20} />
-                            </button>
-                          </div>
-                        </div>
+                {lists.map((list) => (
+                  <ColumnContainer
+                    key={list.id}
+                    list={list}
+                    tasks={tasks.filter((task) => task.list_id === list.id)}
+                    editingListId={editingListId}
+                    editingListName={editingListName}
+                    isUpdateDisabled={isUpdateDisabled}
+                    isSubmitting={isSubmitting}
+                    setEditingListId={setEditingListId}
+                    setEditingListName={setEditingListName}
+                    handleUpdateList={handleUpdateList}
+                    confirmDeleteList={confirmDeleteList}
+                    onTaskAdded={(newTask) =>
+                      setTasks((prev) => [...prev, newTask])
+                    }
+                    onDeleteTask={confirmDeleteTask}
+                  />
+                ))}
+
+                {typeof window !== "undefined" &&
+                  createPortal(
+                    <DragOverlay>
+                      {activeTask && (
+                        // Kartu di overlay tidak perlu fungsi interaktif
+                        <TaskCard task={activeTask} onDelete={() => {}} />
                       )}
-                    </KanbanHeader>
-                    <KanbanCards className="px-0" id={column.id}>
-                      {(feature) => {
-                        console.log(feature);
-
-                        return (
-                          // Gunakan TaskCard sebagai wrapper untuk KanbanCard
-
-                          <TaskCard
-                            column={column.name}
-                            id={feature.id}
-                            key={feature.id}
-                            name={feature.name}
-                            onEdit={handleEditTask}
-                            onDelete={confirmDeleteTask}
-                          />
-                        );
-                      }}
-                    </KanbanCards>
-                    {/* Sisipkan fitur Add Task di bawah KanbanCards */}
-                    <AddTask
-                      listId={column.id}
-                      onTaskAdded={(newTask) =>
-                        setTasks((prev) => [...prev, newTask])
-                      }
-                    />
-                  </KanbanBoard>
-                )}
-              </KanbanProvider>
+                    </DragOverlay>,
+                    document.body
+                  )}
+              </DndContext>
             </div>
           </div>
         </div>
@@ -447,37 +411,179 @@ export default function BoardPage({ children }: { children: ReactNode }) {
     </Protected>
   );
 }
-// TaskCard akan menggantikan komponen Task Anda dan menggunakan KanbanCard
-function TaskCard({
-  id,
-  name,
-  column,
-  onDelete,
-  onEdit,
+
+function ColumnContainer({
+  list,
+  tasks,
+  editingListId,
+  editingListName,
+  isUpdateDisabled,
+  isSubmitting,
+  setEditingListId,
+  setEditingListName,
+  handleUpdateList,
+  confirmDeleteList,
+  onTaskAdded,
+  onDeleteTask,
 }: {
-  id: string;
-  name: string;
-  column: string;
+  list: ListType;
+  tasks: TaskType[];
+  editingListId: string | null;
+  editingListName: string;
+  isUpdateDisabled: boolean;
+  isSubmitting: boolean;
+  setEditingListId: (id: string | null) => void;
+  setEditingListName: (name: string) => void;
+  handleUpdateList: (e: FormEvent<HTMLFormElement>) => void;
+  confirmDeleteList: (id: string) => void;
+  onTaskAdded: (task: TaskType) => void;
+  onDeleteTask: (id: string) => void;
+}) {
+  const { setNodeRef, isOver } = useSortable({
+    id: list.id,
+    data: {
+      type: "Column",
+      list,
+    },
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      className="w-full h-fit max-w-xs bg-black py-4 px-4 rounded-lg flex flex-col gap-2 shadow-2xl border-none"
+    >
+      {/* Header */}
+      <div className="border-none">
+        {editingListId === list.id ? (
+          <form
+            onSubmit={handleUpdateList}
+            className="flex flex-col gap-2 w-full"
+          >
+            <input
+              className="bg-black text-white placeholder:text-white rounded-lg px-5 py-2 w-full outline-white focus:outline-blue-400 outline-2"
+              type="text"
+              value={editingListName}
+              onChange={(e) => setEditingListName(e.target.value)}
+              autoFocus
+            />
+            <div className="flex gap-2 items-center">
+              <button
+                disabled={isUpdateDisabled || isSubmitting}
+                type="submit"
+                className={`flex items-center justify-center gap-2 relative ${
+                  (isUpdateDisabled || isSubmitting) && "opacity-50"
+                } bg-blue-400 cursor-pointer text-black font-medium py-2 px-4 text-sm rounded-xl`}
+              >
+                {isSubmitting && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loading size={15} />
+                  </div>
+                )}
+                <span className={isSubmitting ? "invisible" : ""}>Update</span>
+              </button>
+              <div
+                onClick={() => setEditingListId(null)}
+                className="cursor-pointer hover:bg-zinc-800 p-1 rounded-lg duration-300"
+              >
+                <X className="text-white" />
+              </div>
+            </div>
+          </form>
+        ) : (
+          <div className="flex items-center justify-between w-full">
+            <h1 className="text-white font-medium text-lg">{list.list_name}</h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setEditingListId(list.id);
+                  setEditingListName(list.list_name);
+                }}
+                className="text-white"
+              >
+                <Pencil size={20} />
+              </button>
+              <button
+                onClick={() => confirmDeleteList(list.id)}
+                className="text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Tasks */}
+      <div
+        className={`flex flex-col gap-2 min-h-[100px] p-2 rounded-lg ${
+          isOver ? "bg-zinc-800" : ""
+        }`}
+      >
+        <SortableContext items={tasks.map((t) => t.id)}>
+          {tasks.map((task) => (
+            <TaskCard key={task.id} task={task} onDelete={onDeleteTask} />
+          ))}
+        </SortableContext>
+      </div>
+
+      {/* Add Task */}
+      <AddTask listId={list.id} onTaskAdded={onTaskAdded} />
+    </div>
+  );
+}
+
+function TaskCard({
+  task,
+  onDelete,
+}: {
   onDelete: (id: string) => void;
-  onEdit: (id: string) => void;
+  task: TaskType;
 }) {
   const router = useRouter();
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: task.id,
+    data: {
+      type: "Task",
+      task,
+    },
+  });
+
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+  };
+
+  if (isDragging) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="bg-zinc-900 p-4 rounded-lg border-2 border-blue-500 opacity-50 h-[60px] w-full"
+      />
+    );
+  }
 
   return (
-    <div className="flex gap-2 items-center w-full relative">
-      <KanbanCard
-        column={column}
-        id={id}
-        key={id}
-        name={name}
-        className="bg-zinc-700 rounded-lg border-none text-white w-full"
-      />
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="bg-zinc-700 p-4 rounded-lg flex justify-between items-center cursor-grab relative"
+    >
+      <p className="text-white">{task.title}</p>
       <div className="absolute right-2 flex gap-3 items-center">
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onDelete(id);
+            onDelete(task.id);
           }}
           className="text-red-400 hover:text-red-300 duration-300 cursor-pointer z-50"
         >
@@ -487,7 +593,7 @@ function TaskCard({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            router.push(`/task/${id}`);
+            router.push(`/task/${task.id}`);
           }}
           className="text-green-400 hover:text-green-300 duration-300 cursor-pointer z-50"
         >
@@ -497,7 +603,6 @@ function TaskCard({
     </div>
   );
 }
-
 // Buat komponen baru untuk Add Task, karena tidak bisa di dalam List lagi
 function AddTask({
   listId,
