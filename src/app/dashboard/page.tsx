@@ -261,10 +261,10 @@ export default function DashboardPage() {
                         disabled={disabled || isSubmitting}
                         type="submit"
                         className={`${
-                          disabled && "opacity-50"
+                          (disabled || isSubmitting) && "opacity-50"
                         } bg-blue-400 cursor-pointer text-black font-medium py-2 px-4 text-sm rounded-xl`}
                       >
-                        {isSubmitting ? "Adding..." : "Add List"}
+                        {isSubmitting ? "Adding.." : "Add Board"}
                       </button>
                       <div
                         onClick={() => setHide(true)}

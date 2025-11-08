@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { Protected } from "@/routes/protected";
 import { Navbar } from "@/components/molecules/navbar";
-import { Bot, Plus, X } from "lucide-react";
+import { Bot, Plus, X, Pencil } from "lucide-react";
 import { supabase } from "@/lib/supabase"; // Kita akan ubah List menjadi child KanbanBoard
 import type { ListType } from "@/types/list";
 import type { TaskType } from "@/types/task"; // Impor TaskType
@@ -28,6 +28,11 @@ export default function BoardPage({ children }: { children: ReactNode }) {
   const [listName, setListName] = useState("");
   const [hide, setHide] = useState(true);
   const [disabled, setDisabled] = useState(true);
+  const [editingListId, setEditingListId] = useState<string | null>(null);
+  const [editingListName, setEditingListName] = useState("");
+  const [isUpdateDisabled, setIsUpdateDisabled] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddingList, setIsAddingList] = useState(false);
 
   useEffect(() => {
     if (!listName) {
@@ -36,6 +41,83 @@ export default function BoardPage({ children }: { children: ReactNode }) {
       setDisabled(false);
     }
   }, [listName]);
+
+  useEffect(() => {
+    if (!editingListName.trim()) {
+      setIsUpdateDisabled(true);
+    } else {
+      setIsUpdateDisabled(false);
+    }
+  }, [editingListName]);
+
+  async function handleUpdateList(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editingListId || !editingListName.trim()) return;
+
+    setIsSubmitting(true);
+    const { data, error } = await supabase
+      .from("lists")
+      .update({ list_name: editingListName })
+      .eq("id", editingListId)
+      .select();
+
+    if (error) {
+      toast.error(error.message);
+    } else if (data) {
+      setLists((prevLists) =>
+        prevLists.map((list) =>
+          list.id === editingListId
+            ? { ...list, list_name: editingListName }
+            : list
+        )
+      );
+      toast.success("List updated successfully");
+    }
+
+    setEditingListId(null);
+    setEditingListName("");
+    setIsSubmitting(false);
+  }
+
+  function confirmDeleteList(id: string) {
+    toast(
+      (t) => (
+        <div className="flex flex-col items-center gap-4 p-2">
+          <p className="font-semibold text-center">
+            Apakah Anda yakin ingin menghapus list ini?
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                handleDeleteList(id);
+                toast.dismiss(t.id);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm"
+            >
+              Ya, Hapus
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg text-sm"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 6000 }
+    );
+  }
+
+  async function handleDeleteList(listId: string) {
+    const { error } = await supabase.from("lists").delete().eq("id", listId);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setLists((prevLists) => prevLists.filter((list) => list.id !== listId));
+      toast.success("List deleted successfully");
+    }
+  }
 
   // Fungsi untuk menangani drag and drop task
   async function handleDragEnd(e: DragEndEvent) {
@@ -71,6 +153,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setIsAddingList(true);
     // ... (kode insert list yang sudah ada)
     const { data, error } = await supabase
       .from("lists")
@@ -87,6 +170,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
     setLists([...lists, data[0] as ListType]);
     setListName("");
     setHide(true);
+    setIsAddingList(false);
   }
 
   // Fungsi fetch digabung, ambil semua lists dan tasks
@@ -166,13 +250,13 @@ export default function BoardPage({ children }: { children: ReactNode }) {
                     />
                     <div className="flex gap-2 items-center">
                       <button
-                        disabled={disabled}
+                        disabled={disabled || isAddingList}
                         type="submit"
                         className={`${
-                          disabled && "opacity-50"
+                          (disabled || isAddingList) && "opacity-50"
                         } bg-blue-400 cursor-pointer text-black font-medium py-2 px-4 text-sm rounded-xl`}
                       >
-                        Add List
+                        {isAddingList ? "Adding.." : "Add List"}
                       </button>
                       <div
                         onClick={() => setHide(true)}
@@ -202,9 +286,67 @@ export default function BoardPage({ children }: { children: ReactNode }) {
                     className="w-full h-fit max-w-xs bg-black py-4 px-4 rounded-lg flex flex-col gap-2 shadow-2xl border-none"
                   >
                     <KanbanHeader className="border-none">
-                      <h1 className="text-white font-medium text-lg">
-                        {column.name}
-                      </h1>
+                      {editingListId === column.id ? (
+                        <form
+                          onSubmit={handleUpdateList}
+                          className="flex flex-col gap-2 w-full"
+                        >
+                          <input
+                            className="bg-black text-white placeholder:text-white rounded-lg px-5 py-2 w-full outline-white focus:outline-blue-400 outline-2"
+                            type="text"
+                            value={editingListName}
+                            onChange={(e) => setEditingListName(e.target.value)}
+                          />
+                          <div className="flex gap-2 items-center">
+                            <button
+                              disabled={isUpdateDisabled || isSubmitting}
+                              type="submit"
+                              className={`flex items-center justify-center gap-2 relative ${
+                                (isUpdateDisabled || isSubmitting) &&
+                                "opacity-50"
+                              } bg-blue-400 cursor-pointer text-black font-medium py-2 px-4 text-sm rounded-xl`}
+                            >
+                              {isSubmitting && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <Loading size={15} />
+                                </div>
+                              )}
+                              <span className={isSubmitting ? "invisible" : ""}>
+                                Update
+                              </span>
+                            </button>
+                            <div
+                              onClick={() => setEditingListId(null)}
+                              className="cursor-pointer hover:bg-zinc-800 p-1 rounded-lg duration-300"
+                            >
+                              <X className="text-white" />
+                            </div>
+                          </div>
+                        </form>
+                      ) : (
+                        <div className="flex items-center justify-between w-full">
+                          <h1 className="text-white font-medium text-lg">
+                            {column.name}
+                          </h1>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingListId(column.id);
+                                setEditingListName(column.name);
+                              }}
+                              className="text-white"
+                            >
+                              <Pencil size={20} />
+                            </button>
+                            <button
+                              onClick={() => confirmDeleteList(column.id)}
+                              className="text-white"
+                            >
+                              <X size={20} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </KanbanHeader>
                     <KanbanCards className="px-0" id={column.id}>
                       {(feature) => {
@@ -289,6 +431,7 @@ function AddTask({
   const [hide, setHide] = useState(true);
   const [disabled, setDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [isAddingTask, setIsAddingTask] = useState(false);
 
   useEffect(() => {
     if (!title || !content) {
@@ -300,6 +443,7 @@ function AddTask({
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setIsAddingTask(true);
     const { data, error } = await supabase
       .from("tasks")
       .insert([
@@ -312,10 +456,13 @@ function AddTask({
       .select();
     if (error) {
       toast.error(error.message);
+      setIsAddingTask(false);
     } else {
       onTaskAdded(data[0] as TaskType);
       setTitle("");
+      setContent(""); // Clear content after adding task
       setHide(true);
+      setIsAddingTask(false);
     }
   }
 
@@ -386,13 +533,13 @@ function AddTask({
             />
             <div className="flex gap-2 items-center">
               <button
-                disabled={disabled}
+                disabled={disabled || isAddingTask}
                 type="submit"
                 className={`${
-                  disabled && "opacity-50"
+                  (disabled || isAddingTask) && "opacity-50"
                 } bg-blue-400 cursor-pointer text-black font-medium py-2 px-4 text-sm rounded-xl`}
               >
-                Add Task
+                {isAddingTask ? "Adding.." : "Add Task"}
               </button>
               <div
                 onClick={() => setHide(true)}
