@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Edit, Plus, Save, X } from "lucide-react";
+import { Edit, Plus, Save, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Protected } from "@/routes/protected";
@@ -107,7 +107,7 @@ export default function DashboardPage() {
       (t) => (
         <div className="flex flex-col items-center gap-4 p-2">
           <p className="font-semibold text-center">
-            Apakah Anda yakin ingin menghapus board ini?
+            Are you sure you want to delete this board?
           </p>
           <div className="flex gap-3">
             <button
@@ -115,15 +115,15 @@ export default function DashboardPage() {
                 handleDelete(id);
                 toast.dismiss(t.id);
               }}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm"
+              className="px-4 py-2 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700"
             >
-              Ya, Hapus
+              Yes, Delete
             </button>
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg text-sm"
+              className="px-4 py-2 text-sm font-bold text-gray-800 bg-gray-200 rounded-lg hover:bg-gray-300"
             >
-              Batal
+              Cancel
             </button>
           </div>
         </div>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
                         }}
                         className="cursor-pointer hover:bg-zinc-700 p-1 rounded-lg duration-300"
                       >
-                        <X color="white" size={16} />
+                        <Trash2 color="white" size={16} />
                       </div>
                     </div>
                   </div>

@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { Protected } from "@/routes/protected";
 import { Navbar } from "@/components/molecules/navbar"; // Pastikan path ini benar
-import { Bot, Plus, X, Pencil, Trash2, Eye } from "lucide-react";
+import { Bot, Plus, X, Trash2, Eye, Edit } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { ListType } from "@/types/list";
 import type { TaskType } from "@/types/task"; // Impor TaskType
@@ -267,7 +267,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
           <div className="flex gap-3">
             <button
               onClick={() => {
-                handleDeleteTask(id); // Panggil fungsi hapus di sini
+                handleDeleteTask(id);
                 toast.dismiss(t.id);
               }}
               className="px-4 py-2 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700"
@@ -449,12 +449,7 @@ function ColumnContainer({
                   (isUpdateDisabled || isSubmitting) && "opacity-50"
                 } bg-blue-400 cursor-pointer text-black font-medium py-2 px-4 text-sm rounded-xl`}
               >
-                {isSubmitting && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Loading size={15} />
-                  </div>
-                )}
-                <span className={isSubmitting ? "invisible" : ""}>Update</span>
+                {isSubmitting ? "Updating..." : "Update"}
               </button>
               <div
                 onClick={() => setEditingListId(null)}
@@ -475,13 +470,13 @@ function ColumnContainer({
                 }}
                 className="text-white"
               >
-                <Pencil size={20} />
+                <Edit size={20} />
               </button>
               <button
                 onClick={() => confirmDeleteList(list.id)}
                 className="text-white"
               >
-                <X size={20} />
+                <Trash2 size={20} />
               </button>
             </div>
           </div>
