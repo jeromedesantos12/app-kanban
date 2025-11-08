@@ -3,8 +3,8 @@
 import toast from "react-hot-toast";
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { Protected } from "@/routes/protected";
-import { Navbar } from "@/components/molecules/navbar";
-import { Bot, Plus, X, Pencil } from "lucide-react";
+import { Navbar } from "@/components/molecules/navbar"; // Pastikan path ini benar
+import { Bot, Plus, X, Pencil, Trash2, Eye } from "lucide-react";
 import { supabase } from "@/lib/supabase"; // Kita akan ubah List menjadi child KanbanBoard
 import type { ListType } from "@/types/list";
 import type { TaskType } from "@/types/task"; // Impor TaskType
@@ -21,6 +21,7 @@ import { Loading } from "@/components/ui/loading";
 
 export default function BoardPage({ children }: { children: ReactNode }) {
   const params = useParams();
+  const router = useRouter();
   const boardId = params.id as string;
   const [lists, setLists] = useState<ListType[]>([]);
   const [tasks, setTasks] = useState<TaskType[]>([]);
@@ -110,13 +111,45 @@ export default function BoardPage({ children }: { children: ReactNode }) {
   }
 
   async function handleDeleteList(listId: string) {
-    const { error } = await supabase.from("lists").delete().eq("id", listId);
+    // Pertama, hapus semua task yang ada di dalam list ini
+    const { error: tasksError } = await supabase
+      .from("tasks")
+      .delete()
+      .eq("list_id", listId);
+
+    if (tasksError) {
+      toast.error(`Gagal menghapus task di dalam list: ${tasksError.message}`);
+      return;
+    }
+
+    // Kedua, setelah task berhasil dihapus, hapus list-nya
+    const { error: listError } = await supabase
+      .from("lists")
+      .delete()
+      .eq("id", listId);
+    if (listError) {
+      toast.error(listError.message);
+    } else {
+      setLists((prevLists) => prevLists.filter((list) => list.id !== listId));
+      setTasks((prevTasks) =>
+        prevTasks.filter((task) => task.list_id !== listId)
+      );
+      toast.success("List deleted successfully");
+    }
+  }
+
+  async function handleDeleteTask(taskId: string) {
+    const { error } = await supabase.from("tasks").delete().eq("id", taskId);
     if (error) {
       toast.error(error.message);
     } else {
-      setLists((prevLists) => prevLists.filter((list) => list.id !== listId));
-      toast.success("List deleted successfully");
+      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+      toast.success("Task deleted successfully");
     }
+  }
+
+  function handleEditTask(taskId: string) {
+    router.push(`/task/${taskId}`);
   }
 
   // Fungsi untuk menangani drag and drop task
@@ -197,6 +230,36 @@ export default function BoardPage({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetchData(boardId);
   }, [boardId]);
+
+  function confirmDeleteTask(id: string) {
+    toast(
+      (t) => (
+        <div className="flex flex-col items-center gap-4 p-2">
+          <p className="font-semibold text-center">
+            Apakah Anda yakin ingin menghapus task ini?
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                handleDeleteTask(id);
+                toast.dismiss(t.id);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm"
+            >
+              Ya, Hapus
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg text-sm"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 6000 }
+    );
+  }
 
   // Format lists agar sesuai dengan properti 'columns' yang diharapkan KanbanProvider
   const kanbanColumns = lists.map((list) => ({
@@ -360,6 +423,8 @@ export default function BoardPage({ children }: { children: ReactNode }) {
                             id={feature.id}
                             key={feature.id}
                             name={feature.name}
+                            onEdit={handleEditTask}
+                            onDelete={confirmDeleteTask}
                           />
                         );
                       }}
@@ -387,10 +452,14 @@ function TaskCard({
   id,
   name,
   column,
+  onDelete,
+  onEdit,
 }: {
   id: string;
   name: string;
   column: string;
+  onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
 }) {
   const router = useRouter();
 
@@ -403,17 +472,28 @@ function TaskCard({
         name={name}
         className="bg-zinc-700 rounded-lg border-none text-white w-full"
       />
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          router.push(`/task/${id}`);
-        }}
-        style={{ pointerEvents: "auto", zIndex: 50 }}
-        className="text-blue-400 hover:text-blue-300 duration-300 absolute right-4 font-bold cursor-pointer"
-      >
-        Detail
-      </button>
+      <div className="absolute right-2 flex gap-3 items-center">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(id);
+          }}
+          className="text-red-400 hover:text-red-300 duration-300 cursor-pointer z-50"
+        >
+          <Trash2 size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/task/${id}`);
+          }}
+          className="text-green-400 hover:text-green-300 duration-300 cursor-pointer z-50"
+        >
+          <Eye size={16} />
+        </button>
+      </div>
     </div>
   );
 }
