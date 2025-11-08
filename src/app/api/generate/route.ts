@@ -16,11 +16,11 @@ export async function POST(req: Request) {
     }
 
     const prompt = `
-      Buatkan SATU deskripsi singkat namun lucu maksimal 20 kata 
-      dari judul: "${title}".
-      Jangan ulangi atau tulis kembali judulnya.
-      Jangan pakai awalan seperti "${title}:" atau tanda kutip.
-      Langsung tulis isi deskripsinya saja.
+      Create ONE short but funny description, max 20 words, 
+      from the title: "${title}".
+      Do not repeat or rewrite the title.
+      Do not use prefixes like "${title}:" or quotation marks.
+      Just write the description content directly.
     `;
 
     const response = await ai.models.generateContent({

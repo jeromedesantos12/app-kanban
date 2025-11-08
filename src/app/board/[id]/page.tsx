@@ -97,7 +97,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
       (t) => (
         <div className="flex flex-col items-center gap-4 p-2">
           <p className="font-semibold text-center">
-            Apakah Anda yakin ingin menghapus list ini?
+            Are you sure you want to delete this list?
           </p>
           <div className="flex gap-3">
             <button
@@ -105,15 +105,15 @@ export default function BoardPage({ children }: { children: ReactNode }) {
                 handleDeleteList(id);
                 toast.dismiss(t.id);
               }}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm"
+              className="px-4 py-2 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700"
             >
-              Ya, Hapus
+              Yes, Delete
             </button>
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg text-sm"
+              className="px-4 py-2 text-sm font-bold text-gray-800 bg-gray-200 rounded-lg hover:bg-gray-300"
             >
-              Batal
+              Cancel
             </button>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
       .eq("list_id", listId);
 
     if (tasksError) {
-      toast.error(`Gagal menghapus task di dalam list: ${tasksError.message}`);
+      toast.error(`Failed to delete tasks in the list: ${tasksError.message}`);
       return;
     }
 
@@ -204,7 +204,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
       .eq("id", activeId);
 
     if (error) {
-      toast.error(`Gagal memindahkan task: ${error.message}`);
+      toast.error(`Failed to move task: ${error.message}`);
       // Jika gagal, kembalikan state ke posisi semula (rollback)
       setTasks(originalTasks);
     }
@@ -262,7 +262,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
       (t) => (
         <div className="flex flex-col items-center gap-4 p-2">
           <p className="font-semibold text-center">
-            Apakah Anda yakin ingin menghapus task ini?
+            Are you sure you want to delete this task?
           </p>
           <div className="flex gap-3">
             <button
@@ -270,15 +270,15 @@ export default function BoardPage({ children }: { children: ReactNode }) {
                 handleDeleteTask(id); // Panggil fungsi hapus di sini
                 toast.dismiss(t.id);
               }}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm"
+              className="px-4 py-2 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700"
             >
-              Ya, Hapus
+              Yes, Delete
             </button>
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg text-sm"
+              className="px-4 py-2 text-sm font-bold text-gray-800 bg-gray-200 rounded-lg hover:bg-gray-300"
             >
-              Batal
+              Cancel
             </button>
           </div>
         </div>

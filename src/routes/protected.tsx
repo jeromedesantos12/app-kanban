@@ -13,14 +13,14 @@ export function Protected({ children }: { children: ReactNode }) {
   const { status, data } = useSelector((state: RootState) => state.session);
   const dispatch: AppDispatch = useDispatch();
 
-  // 🔁 Ambil session awal saat pertama kali render
+  // 🔁 Get initial session on first render
   useEffect(() => {
     if (status === "idle") {
       dispatch(fetchSession());
     }
   }, [dispatch, status]);
 
-  // 👀 Reaksi terhadap perubahan auth state secara real-time
+  // 👀 React to auth state changes in real-time
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -33,13 +33,13 @@ export function Protected({ children }: { children: ReactNode }) {
         }
       }
     );
-    // 🧹 Cleanup listener saat komponen unmount
+    // 🧹 Cleanup listener on component unmount
     return () => {
       listener.subscription.unsubscribe();
     };
   }, [dispatch, router]);
 
-  // 🔐 Redirect jika user tidak punya session
+  // 🔐 Redirect if user has no session
   useEffect(() => {
     if (status === "succeeded" && !data) {
       router.replace("/login");
@@ -58,10 +58,10 @@ export function Protected({ children }: { children: ReactNode }) {
   return null;
 }
 
-// 📌 Penjelasan logika baru:
+// 📌 New logic explanation:
 
-// 🔥 fetchSession() tetap dipakai sekali saat awal supaya Redux langsung punya session dari local storage (kalau ada).
-// 👂 onAuthStateChange() akan jalan terus:
-// Kalau user login / signUp / token refresh, kita panggil setSession(session).
-// Kalau user logout / token expire, kita clearSession() dan langsung redirect ke /login.
-// 🧹 Cleanup penting supaya listener gak nambah dua kali kalau komponen re-render.
+// 🔥 fetchSession() is still used once at the beginning so that Redux immediately has a session from local storage (if any).
+// 👂 onAuthStateChange() will continue to run:
+// If the user logs in / signs up / token refreshes, we call setSession(session).
+// If the user logs out / token expires, we clearSession() and immediately redirect to /login.
+// 🧹 Cleanup is important so that the listener doesn't get added twice if the component re-renders.

@@ -19,7 +19,7 @@ export function Workflow() {
         className="text-3xl text-white font-bold flex gap-2 items-center text-center leading-tight tracking-tight"
       >
         <MessageCircleQuestionMark className="text-white" />
-        Bagaimana Cara Kerjanya?
+        How It Works?
       </motion.h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl px-4 sm:px-6 lg:px-8 mt-5">
         <motion.div
@@ -30,10 +30,10 @@ export function Workflow() {
         >
           <LayoutDashboard size={52} className="text-white" />
           <h3 className="text-xl font-bold mt-2 text-white">
-            1. Buat Board Proyek
+            1. Create Project Board
           </h3>
           <p className="text-gray-300">
-            Mulai dengan membuat papan untuk setiap proyek atau inisiatif baru.
+            Start by creating a board for each new project or initiative.
           </p>
         </motion.div>
         <motion.div
@@ -43,10 +43,11 @@ export function Workflow() {
         >
           <ListPlus size={52} className="text-white" />
           <h3 className="text-xl font-bold mt-2">
-            2. Tambah Tugas & Atur Kolom
+            2. Add Tasks & Set Columns
           </h3>
           <p className="text-gray-300">
-            Isi papan dengan tugas, lalu kelompokkan dalam kolom sesuai status.
+            Fill the board with tasks, then group them into columns according
+            to status.
           </p>
         </motion.div>
         <motion.div
@@ -57,11 +58,10 @@ export function Workflow() {
         >
           <TrendingUp size={52} className="text-white" />
           <h3 className="text-xl text-white font-bold mt-2">
-            3. Pantau Progress Bersama Tim
+            3. Track Progress with Your Team
           </h3>
           <p className="text-gray-300">
-            Pindahkan kartu dengan mudah dan lihat kemajuan proyek secara
-            real-time.
+            Easily move cards and see project progress in real-time.
           </p>
         </motion.div>
       </div>

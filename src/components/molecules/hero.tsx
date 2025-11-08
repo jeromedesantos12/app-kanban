@@ -19,7 +19,7 @@ export function Hero() {
           >
             <LayoutGrid className="w-5 h-5 text-white" />
             <span className="text-sm text-gray-300">
-              Manajemen Proyek Lebih Terorganisir
+              More Organized Project Management
             </span>
           </motion.div>
           <motion.h1
@@ -28,7 +28,7 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-4xl sm:text-5xl md:text-6xl text-white font-extrabold leading-tight tracking-tighter"
           >
-            Transformasi Produktivitas Tim dengan Kanban Cerdas
+            Transform Team Productivity with Smart Kanban
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -36,8 +36,8 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="text-lg sm:text-xl text-white max-w-2xl"
           >
-            Visualisasikan alur kerja, otomatiskan tugas, dan raih tujuan proyek
-            Anda lebih cepat dari sebelumnya.
+            Visualize workflows, automate tasks, and achieve your project goals
+            faster than ever.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -47,13 +47,13 @@ export function Hero() {
           >
             <Link href="/register">
               <button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 duration-300 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 text-lg">
-                Mulai Gratis
+                Get Started Free
                 <ArrowRight className="w-5 h-5" />
               </button>
             </Link>
             <Link href="/#feature">
               <button className="w-full sm:w-auto bg-transparent border-2 border-gray-600 hover:bg-gray-800 duration-300 text-white font-medium py-3 px-6 rounded-lg text-lg">
-                Pelajari Fitur
+                Learn Features
               </button>
             </Link>
           </motion.div>
@@ -67,7 +67,7 @@ export function Hero() {
           <div className="hidden sm:block relative rounded-xl bg-gray-900/50 border border-gray-700/50 shadow-2xl p-4">
             <div className="flex justify-between items-center mb-4 px-2">
               <h3 className="text-lg font-semibold text-white">
-                Proyek Mendesain Ulang Website
+                Website Redesign Project
               </h3>
               <div className="flex -space-x-2">
                 <Image
@@ -98,13 +98,11 @@ export function Hero() {
                 <h4 className="font-semibold text-white mb-3">To Do</h4>
                 <div className="space-y-3">
                   <div className="bg-gray-700/80 p-3 rounded-md shadow">
-                    <p className="text-sm text-gray-200">
-                      Desain halaman utama
-                    </p>
+                    <p className="text-sm text-gray-200">Design main page</p>
                   </div>
                   <div className="bg-gray-700/80 p-3 rounded-md shadow">
                     <p className="text-sm text-gray-200">
-                      Buat wireframe untuk mobile
+                      Create wireframe for mobile
                     </p>
                   </div>
                 </div>
@@ -114,11 +112,11 @@ export function Hero() {
                 <div className="space-y-3">
                   <div className="bg-gray-700/80 p-3 rounded-md shadow">
                     <p className="text-sm text-gray-200">
-                      Kembangkan komponen UI
+                      Develop UI components
                     </p>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-gray-400">
-                        Due: 3 Hari lagi
+                        Due: 3 days left
                       </span>
                       <Image
                         width={32}
@@ -136,7 +134,7 @@ export function Hero() {
                 <div className="space-y-3">
                   <div className="bg-gray-700/80 p-3 rounded-md shadow opacity-70">
                     <p className="text-sm text-gray-200 line-through">
-                      Riset kompetitor
+                      Competitor research
                     </p>
                   </div>
                 </div>
