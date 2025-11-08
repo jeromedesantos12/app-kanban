@@ -5,6 +5,7 @@
 3. [Config AI: Untuk Suggestion Content Task](md/configAI.md)
 4. [Config Buncket: Untuk Setting Policy Supabase](md/configBucket.md)
 5. [Config Img: Untuk upload gambar di NextJS](md/configImg.md)
+6. [Pemecahan Bug Drag & Drop dnd-kit](md/dndKit.md)
 
 ## BUG
 

@@ -13,20 +13,18 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
-  DragOverEvent,
   PointerSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import { SortableContext, useSortable, arrayMove } from "@dnd-kit/sortable";
-import { CSS, is_fl } from "@dnd-kit/utilities";
+import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
 import { useRouter, useParams } from "next/navigation";
 import { Loading } from "@/components/ui/loading";
 
 export default function BoardPage({ children }: { children: ReactNode }) {
   const params = useParams();
-  const router = useRouter();
   const boardId = params.id as string;
   const [lists, setLists] = useState<ListType[]>([]);
   const [tasks, setTasks] = useState<TaskType[]>([]);
@@ -162,48 +160,6 @@ export default function BoardPage({ children }: { children: ReactNode }) {
     }
   }
 
-  function onDragOver(event: DragOverEvent) {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id;
-    const overId = over.id;
-
-    if (activeId === overId) return;
-
-    const isActiveATask = active.data.current?.type === "Task";
-    const isOverATask = over.data.current?.type === "Task";
-
-    if (!isActiveATask) return;
-
-    // Memindahkan task ke kolom lain
-    if (isActiveATask && isOverATask) {
-      const activeTask = tasks.find((t) => t.id === activeId);
-      const overTask = tasks.find((t) => t.id === overId);
-
-      if (activeTask && overTask && activeTask.list_id !== overTask.list_id) {
-        setTasks((tasks) => {
-          const activeIndex = tasks.findIndex((t) => t.id === activeId);
-          tasks[activeIndex].list_id = overTask.list_id;
-          return arrayMove(tasks, activeIndex, activeIndex);
-        });
-      }
-    }
-
-    const isOverAColumn = over.data.current?.type === "Column";
-    if (isActiveATask && isOverAColumn) {
-      const activeTask = tasks.find((t) => t.id === activeId);
-      if (activeTask && activeTask.list_id !== overId) {
-        setTasks((currentTasks) => {
-          const activeIndex = currentTasks.findIndex((t) => t.id === activeId);
-          // Update list_id secara optimis untuk UI
-          currentTasks[activeIndex].list_id = overId as string;
-          return arrayMove(currentTasks, activeIndex, activeIndex);
-        });
-      }
-    }
-  }
-
   function onDragStart(event: DragStartEvent) {
     if (event.active.data.current?.type === "Task") {
       setActiveTask(event.active.data.current.task);
@@ -215,7 +171,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
     setActiveTask(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    
+
     const activeId = active.id;
     const overId = over.id;
 
@@ -223,7 +179,7 @@ export default function BoardPage({ children }: { children: ReactNode }) {
     if (!isActiveATask) return;
 
     // Tentukan ID kolom tujuan, baik saat drop di atas kolom atau di atas task lain
-    const newColumnId = 
+    const newColumnId =
       over.data.current?.type === "Task"
         ? over.data.current.task.list_id
         : overId;
@@ -242,7 +198,10 @@ export default function BoardPage({ children }: { children: ReactNode }) {
     });
 
     // 2. Kirim pembaruan ke database
-    const { error } = await supabase.from("tasks").update({ list_id: newColumnId }).eq("id", activeId);
+    const { error } = await supabase
+      .from("tasks")
+      .update({ list_id: newColumnId })
+      .eq("id", activeId);
 
     if (error) {
       toast.error(`Gagal memindahkan task: ${error.message}`);
